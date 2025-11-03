@@ -1,6 +1,6 @@
 import jakarta.persistence.*
 import ru.itmo.tickets_shop.entity.Hall
-import sun.security.krb5.internal.Ticket
+import ru.itmo.tickets_shop.entity.Ticket
 import java.time.LocalDateTime
 
 @Entity
@@ -21,8 +21,8 @@ class Show(
     val showTime: LocalDateTime,
 
     @OneToMany(mappedBy = "show")
-    val seatPrices: List<SeatPrice> = mutableListOf(),
+    val seatPrices: MutableList<SeatPrice> = mutableListOf(),
 
     @OneToMany(mappedBy = "show")
-    val tickets: List<Ticket> = mutableListOf()
+    val tickets: MutableList<Ticket> = mutableListOf()
 )

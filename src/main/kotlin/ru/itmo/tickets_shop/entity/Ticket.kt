@@ -24,5 +24,6 @@ class Ticket(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
-    val order: Order
+    val order: Order,
+
 )

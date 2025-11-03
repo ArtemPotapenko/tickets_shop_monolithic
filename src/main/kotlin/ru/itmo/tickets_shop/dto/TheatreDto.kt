@@ -13,5 +13,5 @@ data class TheatreDto(
     val city: String,
     val address: String,
     val halls: List<HallDto>,
-    val shows : List<ShowDto>
+    val shows : List<ShowViewDto>
 )
