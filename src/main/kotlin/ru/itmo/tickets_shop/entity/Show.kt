@@ -1,6 +1,6 @@
+package ru.itmo.tickets_shop.entity
+
 import jakarta.persistence.*
-import ru.itmo.tickets_shop.entity.Hall
-import ru.itmo.tickets_shop.entity.Ticket
 import java.time.LocalDateTime
 
 @Entity

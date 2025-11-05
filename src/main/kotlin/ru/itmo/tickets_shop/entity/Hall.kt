@@ -13,9 +13,9 @@ class Hall(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "theatre_id")
-    val theatre: Theatre,
+    val theatre: Theatre?,
 
     @OneToMany(mappedBy = "hall", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val seats: MutableList<Seat> = mutableListOf()
+    var seats: MutableList<Seat> = mutableListOf()
 )
 

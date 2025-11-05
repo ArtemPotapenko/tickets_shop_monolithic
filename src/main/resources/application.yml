@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: tickets-shop
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tickets_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # при разработке: auto-update схемы
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE

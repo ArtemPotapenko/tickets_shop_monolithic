@@ -1,5 +1,6 @@
+package ru.itmo.tickets_shop.entity
+
 import jakarta.persistence.*
-import ru.itmo.tickets_shop.entity.Seat
 
 @Entity
 @Table(name = "seat_price")
@@ -24,4 +25,4 @@ class SeatPrice(
 data class SeatPriceId(
     val seatId: Long = 0,
     val showId: Long = 0
-) : java.io.Serializable
+)

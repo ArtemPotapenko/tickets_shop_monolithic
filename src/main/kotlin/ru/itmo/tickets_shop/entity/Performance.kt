@@ -1,12 +1,10 @@
+package ru.itmo.tickets_shop.entity
+
 import jakarta.persistence.*
-import lombok.EqualsAndHashCode
-import lombok.ToString
 import ru.itmo.tickets_shop.entity.Theatre
 
 @Entity
 @Table(name = "performance")
-@ToString
-@EqualsAndHashCode
 class Performance(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,8 +15,6 @@ class Performance(
     var durationMinutes: Int? = null,
 
     @OneToMany(mappedBy = "performance")
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     val shows: MutableList<Show> = mutableListOf(),
 
     @ManyToMany
@@ -27,7 +23,5 @@ class Performance(
         joinColumns = [JoinColumn(name = "performance_id")],
         inverseJoinColumns = [JoinColumn(name = "theatre_id")]
     )
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    val theatres: MutableList<Theatre> = mutableListOf()
+    var theatres: MutableList<Theatre> = mutableListOf()
 )

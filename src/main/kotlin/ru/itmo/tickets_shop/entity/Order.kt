@@ -1,4 +1,5 @@
 package ru.itmo.tickets_shop.entity
+
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -7,7 +8,7 @@ import java.time.LocalDateTime
 class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    val id: Long = 0,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
@@ -16,6 +17,11 @@ class Order(
     @Enumerated(EnumType.STRING)
     var status: OrderStatus = OrderStatus.RESERVED,
 
-    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val tickets: MutableList<Ticket> = mutableListOf()
+    @ManyToMany(cascade = [CascadeType.ALL])
+    @JoinTable(
+        name = "order_ticket",
+        joinColumns = [JoinColumn(name = "order_id")],
+        inverseJoinColumns = [JoinColumn(name = "ticket_id")]
+    )
+    var tickets: MutableList<Ticket> = mutableListOf()
 )

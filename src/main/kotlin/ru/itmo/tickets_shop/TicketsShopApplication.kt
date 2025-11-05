@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class TicketsShopApplication
+open class TicketsShopApplication
 
 fun main(args: Array<String>) {
 	runApplication<TicketsShopApplication>(*args)
