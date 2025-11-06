@@ -8,9 +8,9 @@ import jakarta.persistence.*
 class Theatre(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    var id: Long = 0,
 
-    var name: String,
+    val name: String,
     val city: String,
     val address: String,
     @OneToMany(mappedBy = "theatre", cascade = [CascadeType.ALL], orphanRemoval = true)
@@ -19,3 +19,6 @@ class Theatre(
     @ManyToMany(mappedBy = "theatres")
     var performances: MutableList<Performance> = mutableListOf()
 )
+{
+    constructor() : this(name = "", city = "", address = "")
+}

@@ -7,7 +7,7 @@ import jakarta.persistence.*
 class Hall(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    var id: Long = 0,
 
     val number: Int,
 
@@ -18,4 +18,6 @@ class Hall(
     @OneToMany(mappedBy = "hall", cascade = [CascadeType.ALL], orphanRemoval = true)
     var seats: MutableList<Seat> = mutableListOf()
 )
-
+{
+    constructor() : this(0, 0, null)
+}

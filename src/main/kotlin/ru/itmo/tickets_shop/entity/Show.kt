@@ -8,15 +8,15 @@ import java.time.LocalDateTime
 class Show(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    var id: Long = 0,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "performance_id")
-    val performance: Performance,
+    var performance: Performance,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hall_id")
-    val hall: Hall,
+    var hall: Hall,
 
     val showTime: LocalDateTime,
 
@@ -26,3 +26,6 @@ class Show(
     @OneToMany(mappedBy = "show")
     val tickets: MutableList<Ticket> = mutableListOf()
 )
+{
+    constructor() : this(0, Performance(), Hall(), LocalDateTime.now())
+}

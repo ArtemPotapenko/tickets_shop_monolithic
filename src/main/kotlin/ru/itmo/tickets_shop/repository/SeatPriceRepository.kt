@@ -9,6 +9,6 @@ import ru.itmo.tickets_shop.entity.Show
 
 @Repository
 interface SeatPriceRepository : JpaRepository<SeatPrice, SeatPriceId> {
-    @Query("from SeatPrice seatPrice join fetch seatPrice.seat s where seatPrice.show.id = :seatId")
+    @Query("from SeatPrice seatPrice join fetch seatPrice.seat s where seatPrice.show.id = :showId")
     fun findSeatsByShow(showId: Long) : List<SeatPrice>;
 }

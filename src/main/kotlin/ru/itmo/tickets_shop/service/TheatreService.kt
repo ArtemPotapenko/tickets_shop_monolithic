@@ -1,8 +1,7 @@
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
+package ru.itmo.tickets_shop.service
+
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import ru.itmo.tickets_shop.dto.TheatreDto
@@ -56,7 +55,7 @@ open class TheatreService(
         if (theatre.id == null) {
             throw IllegalArgumentException("ID должен быть не null при обновлении")
         }
-        if (theatreRepository.existsById(theatre.id)) {
+        if (!theatreRepository.existsById(theatre.id)) {
             throw TheatreNotFoundException("Theatre not found with id ${theatre.id}")
         }
         return theatreRepository.save(

@@ -6,7 +6,7 @@ import jakarta.persistence.*
 @Table(name = "seat_price")
 class SeatPrice(
     @EmbeddedId
-    val id: SeatPriceId,
+    var id: SeatPriceId,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("seatId")
@@ -20,6 +20,9 @@ class SeatPrice(
 
     val price: Int
 )
+{
+    constructor():this(SeatPriceId(), Seat(), Show(), 0);
+}
 
 @Embeddable
 data class SeatPriceId(

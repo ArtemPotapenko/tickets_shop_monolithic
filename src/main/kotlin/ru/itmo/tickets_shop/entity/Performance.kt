@@ -8,14 +8,14 @@ import ru.itmo.tickets_shop.entity.Theatre
 class Performance(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    var id: Long = 0,
 
     var title: String,
     var description: String? = null,
     var durationMinutes: Int? = null,
 
     @OneToMany(mappedBy = "performance")
-    val shows: MutableList<Show> = mutableListOf(),
+    var shows: MutableList<Show> = mutableListOf(),
 
     @ManyToMany
     @JoinTable(
@@ -25,3 +25,6 @@ class Performance(
     )
     var theatres: MutableList<Theatre> = mutableListOf()
 )
+{
+    constructor() : this(0, "",null,null)
+}

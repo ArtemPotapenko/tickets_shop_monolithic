@@ -1,6 +1,7 @@
 package ru.itmo.tickets_shop.entity
 
 import jakarta.persistence.*
+import ru.itmo.tickets_shop.entity.Hall
 import java.time.LocalDateTime
 
 @Entity
@@ -8,7 +9,7 @@ import java.time.LocalDateTime
 class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    var id: Long = 0,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
@@ -25,3 +26,6 @@ class Order(
     )
     var tickets: MutableList<Ticket> = mutableListOf()
 )
+{
+    constructor() : this(0, LocalDateTime.now(), null,OrderStatus.RESERVED)
+}

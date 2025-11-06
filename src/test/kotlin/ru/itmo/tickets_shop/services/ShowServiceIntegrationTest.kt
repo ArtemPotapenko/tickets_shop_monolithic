@@ -1,0 +1,88 @@
+package ru.itmo.tickets_shop
+
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.jdbc.Sql
+import ru.itmo.tickets_shop.exception.ShowNotFoundException
+import ru.itmo.tickets_shop.service.ShowService
+
+@SpringBootTest
+open class ShowServiceIntegrationTest : PostgresContainerConfig() {
+
+    @Autowired
+    private lateinit var showService: ShowService
+
+    @Test
+    @DisplayName("Получение информации о шоу — успешный кейс")
+    @Sql(
+        scripts = [
+            "classpath:sql/clean.sql",
+            "classpath:sql/init.sql",
+            "classpath:sql/insert.sql"
+        ],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun getShowInfoSuccess() = runBlocking {
+        val dto = showService.getShowInfo(1L)
+
+        assertEquals(1L, dto.id)
+        assertEquals(dto.durationMinutes, 120)
+        assertNotNull(dto.hall)
+    }
+
+    @Test
+    @DisplayName("Получение информации о шоу — ошибка, если шоу не найдено")
+    @Sql(
+        scripts = [
+            "classpath:sql/clean.sql",
+            "classpath:sql/init.sql",
+            "classpath:sql/insert.sql"
+        ],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun getShowInfoNotFound() {
+        assertThrows<ShowNotFoundException> {
+            runBlocking { showService.getShowInfo(999L) }
+        }
+    }
+
+    @Test
+    @DisplayName("Получение всех шоу в городе")
+    @Sql(
+        scripts = [
+            "classpath:sql/clean.sql",
+            "classpath:sql/init.sql",
+            "classpath:sql/insert.sql"
+        ],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun getAllShowInCity() = runBlocking {
+        val page = showService.getAllShow("Москва", 1, 10)
+
+        assertTrue(page.content.isNotEmpty())
+        assertEquals("Лебединое озеро", page.content.first().tittle)
+    }
+
+    @Test
+    @DisplayName("Получение всех мест на шоу")
+    @Sql(
+        scripts = [
+            "classpath:sql/clean.sql",
+            "classpath:sql/init.sql",
+            "classpath:sql/insert.sql"
+        ],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun getAllSeatsForShow() = runBlocking {
+        val seats = showService.getAllSeats(1L)
+
+        assertTrue(seats.isNotEmpty())
+        assertTrue(seats.first().seats.isNotEmpty())
+        assertTrue(seats.any { it.row > 0 })
+    }
+}

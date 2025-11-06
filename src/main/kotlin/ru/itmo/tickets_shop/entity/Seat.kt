@@ -15,7 +15,7 @@ import jakarta.persistence.Table
 class Seat(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    var id: Long = 0,
 
     val rowNumber: Int,
     val seatNumber: Int,
@@ -24,3 +24,6 @@ class Seat(
     @JoinColumn(name = "hall_id")
     val hall: Hall
 )
+{
+    constructor() : this(0,0,0, Hall())
+}
