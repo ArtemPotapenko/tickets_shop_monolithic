@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 import ru.itmo.tickets_shop.entity.Theatre
 
 @Repository
-interface TheatreRepository : JpaRepository<Theatre, Long>, JpaSpecificationExecutor<Theatre> {
+interface TheatreRepository : JpaRepository<Theatre, Long> {
 
     @Query("select t from Theatre t where t.city = :city")
     fun findAllByCity(city: String, pageable: Pageable): Page<Theatre>

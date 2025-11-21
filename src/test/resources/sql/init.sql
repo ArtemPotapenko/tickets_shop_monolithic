@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS ticket (
 CREATE TABLE IF NOT EXISTS orders (
                                       id BIGSERIAL PRIMARY KEY,
                                       created_at TIMESTAMP NOT NULL,
+                                      sum_price INT,
                                       reserved_at TIMESTAMP,
                                       status VARCHAR(20) NOT NULL
     );

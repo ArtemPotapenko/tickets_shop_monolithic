@@ -1,7 +1,6 @@
 package ru.itmo.tickets_shop.entity
 
 import jakarta.persistence.*
-import ru.itmo.tickets_shop.entity.Hall
 import java.time.LocalDateTime
 
 @Entity
@@ -18,6 +17,8 @@ class Order(
     @Enumerated(EnumType.STRING)
     var status: OrderStatus = OrderStatus.RESERVED,
 
+    var sumPrice: Int,
+
     @ManyToMany(cascade = [CascadeType.ALL])
     @JoinTable(
         name = "order_ticket",
@@ -27,5 +28,5 @@ class Order(
     var tickets: MutableList<Ticket> = mutableListOf()
 )
 {
-    constructor() : this(0, LocalDateTime.now(), null,OrderStatus.RESERVED)
+    constructor() : this(0, LocalDateTime.now(), null,OrderStatus.RESERVED, 0)
 }

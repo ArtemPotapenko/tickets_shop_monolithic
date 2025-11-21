@@ -16,7 +16,7 @@ class Ticket(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id")
-    val seat: Seat?,
+    var seat: Seat?,
 
     @Enumerated(EnumType.STRING)
     var status: TicketStatus,

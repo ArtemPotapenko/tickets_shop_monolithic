@@ -25,7 +25,7 @@ fun Theatre.toViewDto(): TheatreViewDto = TheatreViewDto(
 )
 
 fun TheatrePayload.toTheatre(): Theatre {
-    var theatre = Theatre(
+    val theatre = Theatre(
         id = id ?: 0,
         name = name,
         city = city,

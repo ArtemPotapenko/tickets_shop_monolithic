@@ -98,6 +98,18 @@
             <artifactId>kotlinx-coroutines-reactor</artifactId>
             <version>1.7.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -131,8 +143,7 @@
                             </pluginOptions>
                         </configuration>
                     </execution>
-                </executions>
-
+                </executions>я
                 <dependencies>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>

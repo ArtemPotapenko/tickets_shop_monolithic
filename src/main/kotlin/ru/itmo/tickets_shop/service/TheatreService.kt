@@ -1,5 +1,6 @@
 package ru.itmo.tickets_shop.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
@@ -23,12 +24,18 @@ open class TheatreService(
     private val theatreRepository: TheatreRepository
 ) {
 
+    private val log = LoggerFactory.getLogger(TheatreService::class.java)
+
     open suspend fun getAllTheatreInCity(city: String, page: Int, pageSize: Int): Page<TheatreViewDto> {
-        return theatreRepository.findAllByCity(city, PageRequest.of(page - 1, pageSize))
+        log.info("Получение всех театров в городе={}, страница={}, размер страницы={}", city, page, pageSize)
+        val theatres = theatreRepository.findAllByCity(city, PageRequest.of(page - 1, pageSize))
             .map { it.toViewDto() }
+        log.info("Найдено театров: {}", theatres.totalElements)
+        return theatres
     }
 
     open suspend fun getTheatreInfo(id: Long): TheatreDto {
+        log.info("Получение информации о театре id={}", id)
         val theatre = theatreRepository.findTheatreByIdFetchHall(id)
             ?: throw TheatreNotFoundException("Theatre not found with id $id")
 
@@ -37,29 +44,32 @@ open class TheatreService(
             LocalDateTime.now(),
             LocalDateTime.now().plusDays(14)
         )
+        log.info("Найдено {} шоу для театра id={}", shows.size, id)
         return theatre.toDto(shows)
     }
 
     @Transactional
     open suspend fun createTheatre(theatre: TheatrePayload): TheatrePayload {
+        log.info("Создание театра с названием={}", theatre.name)
         if (theatre.id != null) {
             throw IllegalArgumentException("ID должен быть null при создании")
         }
-        return theatreRepository.save(
-            theatre.toTheatre()
-        ).toPayload()
+        val saved = theatreRepository.save(theatre.toTheatre()).toPayload()
+        log.info("Театр создан с id={}", saved.id)
+        return saved
     }
 
     @Transactional
     open suspend fun updateTheatre(theatre: TheatrePayload): TheatrePayload {
+        log.info("Обновление театра id={}", theatre.id)
         if (theatre.id == null) {
             throw IllegalArgumentException("ID должен быть не null при обновлении")
         }
         if (!theatreRepository.existsById(theatre.id)) {
             throw TheatreNotFoundException("Theatre not found with id ${theatre.id}")
         }
-        return theatreRepository.save(
-            theatre.toTheatre()
-        ).toPayload()
+        val updated = theatreRepository.save(theatre.toTheatre()).toPayload()
+        log.info("Театр обновлен id={}", updated.id)
+        return updated
     }
 }

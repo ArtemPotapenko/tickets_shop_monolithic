@@ -1,5 +1,6 @@
 package ru.itmo.tickets_shop.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
@@ -19,37 +20,51 @@ import java.time.LocalDateTime
 @Service
 open class ShowService(
     private val showRepository: ShowRepository,
-    private val SeatPriceRepository: SeatPriceRepository,
+    private val seatPriceRepository: SeatPriceRepository,
     private val ticketRepository: TicketRepository,
 ) {
-    open suspend fun getShowInfo(id: Long): ShowDto =
-        (showRepository.findShowsByIdFetch(id)
-            ?: throw ShowNotFoundException("Шоу по id $id не найдено")
-                ).toDto()
+    private val log = LoggerFactory.getLogger(ShowService::class.java)
 
-    open suspend fun getAllShow(city: String, page: Int, pageSize: Int): Page<ShowViewDto> =
-        showRepository.findShowsByCityAndTimeBetween(
-            city, LocalDateTime.now(),
-            LocalDateTime.now().plusDays(14), PageRequest.of(page - 1, pageSize)
+    open suspend fun getShowInfo(id: Long): ShowDto {
+        log.info("Получение информации о шоу id={}", id)
+        val show = showRepository.findShowsByIdFetch(id)
+            ?: throw ShowNotFoundException("Шоу по id $id не найдено")
+        log.info("Найдено шоу: {}", show.performance.title)
+        return show.toDto()
+    }
+
+    open suspend fun getAllShow(city: String, page: Int, pageSize: Int): Page<ShowViewDto> {
+        log.info("Получение всех шоу в городе={}, страница={}, размер страницы={}", city, page, pageSize)
+        val shows = showRepository.findShowsByCityAndTimeBetween(
+            city,
+            LocalDateTime.now(),
+            LocalDateTime.now().plusDays(14),
+            PageRequest.of(page - 1, pageSize)
         ).map { it.toViewDto() }
+        log.info("Найдено шоу: {}", shows.map { it.tittle })
+        return shows
+    }
 
     open suspend fun getAllSeats(showId: Long): List<SeatRawDto> {
-        val seats = SeatPriceRepository.findSeatsByShow(showId);
+        log.info("Получение всех мест для шоу id={}", showId)
+        val seats = seatPriceRepository.findSeatsByShow(showId)
         val ids = seats.map { it.seat.id }
         val tickets = ticketRepository.findAllBySeatIdInAndShowId(ids, showId, TicketStatus.CANCELLED)
         val mapSeatToTicket = tickets.associateBy { it.seat!!.id }
+
         val mutableList = mutableListOf<SeatRawDto>()
         val groupedSeats = seats.groupBy { it.seat.rowNumber }
-        groupedSeats.forEach {
+
+        groupedSeats.forEach { (row, seatPrices) ->
             mutableList.add(
                 SeatRawDto(
-                    it.key, it.value.map
-                    {
-                        it.toSeatStatusDto(mapSeatToTicket.get(it.seat.id))
-                    })
+                    row,
+                    seatPrices.map { it.toSeatStatusDto(mapSeatToTicket[it.seat.id]) }
+                )
             )
         }
+
+        log.info("Всего рядов мест: {}", mutableList.size)
         return mutableList
     }
-
 }

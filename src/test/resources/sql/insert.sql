@@ -23,9 +23,9 @@ VALUES (1, 1, 1000), (2, 1, 1200), (3, 1, 900);
 INSERT INTO ticket (show_id, seat_id, status)
 VALUES (1, 1, 'RESERVED'), (1, 2, 'PAID'), (2, 1, 'CANCELLED');
 
-INSERT INTO orders (created_at, reserved_at, status)
-VALUES (now(), now(), 'RESERVED'),
-       (now(), null, 'PAID');
+INSERT INTO orders (created_at, sum_price, reserved_at, status)
+VALUES (now(), 1000, now(), 'RESERVED'),
+       (now(), 1200, null, 'PAID');
 
 INSERT INTO order_ticket (order_id, ticket_id)
 VALUES (1, 1), (2, 2);
