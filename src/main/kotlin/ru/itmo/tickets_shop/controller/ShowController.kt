@@ -9,7 +9,7 @@ import ru.itmo.tickets_shop.dto.*
 import ru.itmo.tickets_shop.service.ShowService
 
 @RestController
-@RequestMapping("/api/v1/show")
+@RequestMapping("/api/shows")
 @Tag(name = "Show", description = "Контроллер для работы с шоу")
 class ShowController(
     private val showService: ShowService
