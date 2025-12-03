@@ -9,7 +9,7 @@ class Hall(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
 
-    val number: Int,
+    var number: Int,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "theatre_id")

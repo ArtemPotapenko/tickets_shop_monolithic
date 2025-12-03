@@ -1,6 +1,5 @@
 package ru.itmo.tickets_shop
 
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -11,6 +10,8 @@ import org.springframework.test.context.jdbc.Sql
 import ru.itmo.tickets_shop.dto.OrderPayload
 import ru.itmo.tickets_shop.entity.OrderStatus
 import ru.itmo.tickets_shop.entity.TicketStatus
+import ru.itmo.tickets_shop.exception.NotFreeSeatException
+import ru.itmo.tickets_shop.exception.OrderNotFoundException
 import ru.itmo.tickets_shop.repository.OrderRepository
 import ru.itmo.tickets_shop.repository.TicketRepository
 import ru.itmo.tickets_shop.service.OrderService
@@ -31,19 +32,11 @@ open class OrderServiceIntegrationTest : PostgresContainerConfig() {
     @Test
     @DisplayName("Резервирование билетов — успешный кейс")
     @Sql(
-        scripts = [
-            "classpath:sql/clean.sql",
-            "classpath:sql/init.sql",
-            "classpath:sql/insert.sql"
-        ],
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
-    fun reserveTicketsSuccess() = runBlocking {
-        val payload = OrderPayload(
-            showId = 1L,
-            seatIds = listOf(3L)
-        )
-
+    fun reserveTicketsSuccess() {
+        val payload = OrderPayload(showId = 1L, seatIds = listOf(3L))
         val dto = orderService.reserveTickets(payload)
 
         assertNotNull(dto.id)
@@ -52,40 +45,57 @@ open class OrderServiceIntegrationTest : PostgresContainerConfig() {
     }
 
     @Test
-    @DisplayName("Автоотмена заказов — RESERVED + reserved_at < now")
+    @DisplayName("Резервирование — ошибка, если место занято")
     @Sql(
-        scripts = [
-            "classpath:sql/clean.sql",
-            "classpath:sql/init.sql",
-            "classpath:sql/insert.sql"
-        ],
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
-    fun cancelExpiredOrders() = runBlocking {
+    fun reserveTicketsFailIfOccupied() {
+        val payload = OrderPayload(showId = 1L, seatIds = listOf(1L)) // место 1 занято
+        assertThrows<NotFreeSeatException> {
+            orderService.reserveTickets(payload)
+        }
+    }
+
+    @Test
+    @DisplayName("Автоотмена заказов — RESERVED + reserved_at < now")
+    @Sql(
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun cancelExpiredOrders() {
         val order = orderRepository.findById(1L).get()
         order.reservedAt = LocalDateTime.now().minusMinutes(10)
         orderRepository.save(order)
 
         orderService.cancelExpiredOrders()
+
+        val updated = orderRepository.findById(1L).get()
+        assertEquals(OrderStatus.CANCELLED, updated.status)
+    }
+
+    @Test
+    @DisplayName("Автоотмена заказов — нет просроченных")
+    @Sql(
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun cancelExpiredOrdersNoExpired() {
+        orderService.cancelExpiredOrders() // должно пройти без ошибок
     }
 
     @Test
     @DisplayName("Оплата билета — успешный кейс")
     @Sql(
-        scripts = [
-            "classpath:sql/clean.sql",
-            "classpath:sql/init.sql",
-            "classpath:sql/insert.sql"
-        ],
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
-    fun payTicketsSuccess() = runBlocking {
+    fun payTicketsSuccess() {
         val order = orderRepository.findById(1L).get()
         order.reservedAt = LocalDateTime.now().plusMinutes(10)
         orderRepository.save(order)
 
         val dto = orderService.payTickets(1L)
-
         assertEquals(OrderStatus.PAID, dto.status)
         val updatedTickets = ticketRepository.findAll()
         assertTrue(updatedTickets.any { it.status == TicketStatus.PAID })
@@ -94,37 +104,53 @@ open class OrderServiceIntegrationTest : PostgresContainerConfig() {
     @Test
     @DisplayName("Оплата билета — ошибка, если заказ просрочен")
     @Sql(
-        scripts = [
-            "classpath:sql/clean.sql",
-            "classpath:sql/init.sql",
-            "classpath:sql/insert.sql"
-        ],
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
-    fun payTicketsExpired() = runBlocking {
+    fun payTicketsExpired() {
         val order = orderRepository.findById(1L).get()
         order.reservedAt = LocalDateTime.now().minusMinutes(5)
         orderRepository.save(order)
 
         assertThrows<IllegalStateException> {
-            runBlocking { orderService.payTickets(1L) }
+            orderService.payTickets(1L)
         }
 
+        orderService.cancelExpiredOrders()
         val updated = orderRepository.findById(1L).get()
         assertEquals(OrderStatus.CANCELLED, updated.status)
     }
 
     @Test
-    @DisplayName("Получение Page<TicketDto> по orderId — успешный кейс")
+    @DisplayName("Оплата билета — ошибка, если заказ уже оплачен")
     @Sql(
-        scripts = [
-            "classpath:sql/clean.sql",
-            "classpath:sql/init.sql",
-            "classpath:sql/insert.sql"
-        ],
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
-    fun getTicketsPageSuccess() = runBlocking {
+    fun payTicketsAlreadyPaid() {
+        val order = orderRepository.findById(2L).get()
+        assertEquals(OrderStatus.PAID, order.status)
+
+        assertThrows<IllegalStateException> {
+            orderService.payTickets(2L)
+        }
+    }
+
+    @Test
+    @DisplayName("Оплата билета — ошибка, если заказ не найден")
+    fun payTicketsNotFound() {
+        assertThrows<OrderNotFoundException> {
+            orderService.payTickets(999L)
+        }
+    }
+
+    @Test
+    @DisplayName("Получение Page<TicketDto> по orderId — успешный кейс")
+    @Sql(
+        scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun getTicketsPageSuccess() {
         val page = orderService.getTicketsPageByOrderId(1L, 0, 10)
 
         assertEquals(1, page.totalElements)
@@ -133,5 +159,13 @@ open class OrderServiceIntegrationTest : PostgresContainerConfig() {
         assertEquals(1000, dto.price)
         assertEquals(1, dto.raw)
         assertEquals(1, dto.number)
+    }
+
+    @Test
+    @DisplayName("Получение билетов — ошибка, если заказ не найден")
+    fun getTicketsPageOrderNotFound() {
+        assertThrows<OrderNotFoundException> {
+            orderService.getTicketsPageByOrderId(999L, 0, 10)
+        }
     }
 }

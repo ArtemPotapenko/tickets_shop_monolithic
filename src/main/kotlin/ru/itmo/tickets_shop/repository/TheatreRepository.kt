@@ -16,4 +16,6 @@ interface TheatreRepository : JpaRepository<Theatre, Long> {
 
     @Query("select t from Theatre t join fetch t.halls where t.id = :id")
     fun findTheatreByIdFetchHall(id: Long): Theatre?
+
+    fun findTheatresById(id : Long) : Theatre?
 }

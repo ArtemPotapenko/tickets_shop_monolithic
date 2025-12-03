@@ -3,7 +3,6 @@ package ru.itmo.tickets_shop.mapper
 import ru.itmo.tickets_shop.dto.ShowDto
 import ru.itmo.tickets_shop.dto.ShowViewDto
 import ru.itmo.tickets_shop.entity.Show
-import ru.itmo.tickets_shop.entity.Theatre
 import ru.itmo.tickets_shop.exception.TheatreNotFoundException
 
 fun Show.toViewDto(): ShowViewDto = ShowViewDto(
@@ -17,7 +16,7 @@ fun Show.toDto(): ShowDto = ShowDto(
     title = performance.title,
     description = performance.description?:"",
     date = showTime,
-    hall = hall.toDto(),
+    hall = hall.toViewDto(),
     durationMinutes = performance.durationMinutes,
     theatre = (hall.theatre?: throw TheatreNotFoundException("У данного шоу не найден театр")).toViewDto()
 )

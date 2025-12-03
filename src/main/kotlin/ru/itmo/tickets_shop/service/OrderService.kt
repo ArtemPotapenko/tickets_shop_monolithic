@@ -16,8 +16,7 @@ import ru.itmo.tickets_shop.entity.TicketStatus
 import ru.itmo.tickets_shop.exception.NotFreeSeatException
 import ru.itmo.tickets_shop.exception.OrderNotFoundException
 import ru.itmo.tickets_shop.mapper.toDto
-import ru.itmo.tickets_shop.mapper.toOrder
-import ru.itmo.tickets_shop.mapper.toTicket
+import ru.itmo.tickets_shop.mapper.toEntity
 import ru.itmo.tickets_shop.repository.OrderRepository
 import ru.itmo.tickets_shop.repository.SeatPriceRepository
 import ru.itmo.tickets_shop.repository.TicketRepository
@@ -33,24 +32,24 @@ open class OrderService(
 
     private val log: Logger = LoggerFactory.getLogger(OrderService::class.java)
 
-    open suspend fun reserveTickets(orderPayload: OrderPayload): OrderDto {
+    open fun reserveTickets(orderPayload: OrderPayload): OrderDto {
         log.info("Резервирование билетов для шоу id={} и мест {}", orderPayload.showId, orderPayload.seatIds)
 
-        val seatsPrice =
-            seatPriceRepository.findSeatsByShowIdAndIdIn(orderPayload.showId, orderPayload.seatIds)
+        val seatsPrice = seatPriceRepository.findSeatsByShowIdAndIdIn(orderPayload.showId, orderPayload.seatIds)
         val tickets = ticketRepository.findAllBySeatIdInAndShowId(
             seatsPrice.map { it.seat.id },
-            orderPayload.showId, TicketStatus.CANCELLED
+            orderPayload.showId,
+            TicketStatus.CANCELLED
         )
-        if (!tickets.isEmpty()) {
+        if (tickets.isNotEmpty()) {
             log.warn("Невозможно создать заказ — места заняты: {}", orderPayload.seatIds)
             throw NotFreeSeatException("Невозможно создать заказ -- есть занятые места")
         }
 
-        val ticketsEntity = seatsPrice.map { it.toTicket() }.toMutableList()
+        val ticketsEntity = seatsPrice.map { it.toEntity() }.toMutableList()
         val sumOf = seatsPrice.sumOf { it.price }
 
-        val order = orderPayload.toOrder(ticketsEntity, sumOf)
+        val order = orderPayload.toEntity(ticketsEntity, sumOf)
         order.tickets = ticketsEntity
         orderRepository.save(order)
 
@@ -59,7 +58,7 @@ open class OrderService(
     }
 
     @Scheduled(fixedRate = 60_000)
-    open suspend fun cancelExpiredOrders() {
+    open fun cancelExpiredOrders() {
         val now = LocalDateTime.now()
         val expired = orderRepository.findAllByStatusAndReservedAtBefore(OrderStatus.RESERVED, now)
 
@@ -76,8 +75,8 @@ open class OrderService(
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
-    open suspend fun payTickets(orderId: Long): OrderDto {
+    @Transactional
+    open fun payTickets(orderId: Long): OrderDto {
         log.info("Оплата заказа id={}", orderId)
 
         val order = orderRepository.findOrderById(orderId)
@@ -116,7 +115,7 @@ open class OrderService(
     }
 
     @Transactional(readOnly = true)
-    open suspend fun getTicketsPageByOrderId(orderId: Long, page: Int, size: Int): Page<TicketDto> {
+    open fun getTicketsPageByOrderId(orderId: Long, page: Int, size: Int): Page<TicketDto> {
         log.info("Получение билетов по заказу id={}, страница={}, размер страницы={}", orderId, page, size)
 
         if (!orderRepository.existsById(orderId)) {

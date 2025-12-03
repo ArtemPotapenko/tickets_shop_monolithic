@@ -13,7 +13,7 @@ fun Theatre.toDto(shows: List<Show>): TheatreDto =
         name = name,
         city = city,
         address = address,
-        halls = halls.map { it.toDto() },
+        halls = halls.map { it.toViewDto() },
         shows = shows.map { it.toViewDto() }
     )
 
@@ -24,7 +24,7 @@ fun Theatre.toViewDto(): TheatreViewDto = TheatreViewDto(
     address = address
 )
 
-fun TheatrePayload.toTheatre(): Theatre {
+fun TheatrePayload.toEntity(): Theatre {
     val theatre = Theatre(
         id = id ?: 0,
         name = name,
@@ -33,7 +33,7 @@ fun TheatrePayload.toTheatre(): Theatre {
         halls = mutableListOf(),
         performances = mutableListOf(),
     )
-    theatre.halls = halls.map { it.toHall(theatre) }.toMutableList()
+    theatre.halls = halls.map { it.toEntity(theatre) }.toMutableList()
     return theatre
 }
 
@@ -42,5 +42,5 @@ fun Theatre.toPayload(): TheatrePayload = TheatrePayload(
     name = name,
     city = city,
     address = address,
-    halls = halls.map { it.toDto() }
+    halls = halls.map { it.toViewDto() }
 )

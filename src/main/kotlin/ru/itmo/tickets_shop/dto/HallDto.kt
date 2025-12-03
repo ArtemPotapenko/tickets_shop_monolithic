@@ -8,6 +8,5 @@ data class HallViewDto(
 data class HallDto(
     val id: Long?,
     val number: Int,
-    val theatre: TheatreViewDto,
     val seatRows: List<SeatRawDto>
 )

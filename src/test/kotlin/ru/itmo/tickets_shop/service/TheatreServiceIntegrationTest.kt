@@ -1,6 +1,5 @@
 package ru.itmo.tickets_shop
 
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -8,8 +7,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.jdbc.Sql
-import ru.itmo.tickets_shop.dto.HallViewDto
-import ru.itmo.tickets_shop.dto.TheatrePayload
+import ru.itmo.tickets_shop.dto.*
 import ru.itmo.tickets_shop.exception.TheatreNotFoundException
 import ru.itmo.tickets_shop.service.TheatreService
 
@@ -27,8 +25,8 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
     )
     fun createTheatreWithHalls() {
         val halls = listOf(
-            HallViewDto(number = 1, id = null),
-            HallViewDto(number = 2, id = null)
+            HallViewDto(id = null, number = 1),
+            HallViewDto(id = null, number = 2)
         )
 
         val payload = TheatrePayload(
@@ -39,7 +37,7 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
             halls = halls
         )
 
-        val created = runBlocking { theatreService.createTheatre(payload) }
+        val created = theatreService.createTheatre(payload)
 
         assertNotNull(created.id)
         assertEquals(2, created.halls.size)
@@ -62,7 +60,7 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
         )
 
         val ex = assertThrows<IllegalArgumentException> {
-            runBlocking { theatreService.updateTheatre(payload) }
+            theatreService.updateTheatre(payload)
         }
 
         assertEquals("ID должен быть не null при обновлении", ex.message)
@@ -84,7 +82,7 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
         )
 
         assertThrows<TheatreNotFoundException> {
-            runBlocking { theatreService.updateTheatre(payload) }
+            theatreService.updateTheatre(payload)
         }
     }
 
@@ -106,7 +104,7 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
             )
         )
 
-        val updated = runBlocking { theatreService.updateTheatre(updatePayload) }
+        val updated = theatreService.updateTheatre(updatePayload)
 
         assertEquals(1L, updated.id)
         assertEquals("Обновлённый театр", updated.name)
@@ -124,7 +122,7 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
     fun getTheatreInfoSuccess() {
         val theatreId = 1L
 
-        val theatre = runBlocking { theatreService.getTheatreInfo(theatreId) }
+        val theatre = theatreService.getTheatreInfo(theatreId)
 
         assertEquals("Мариинский театр", theatre.name)
         assertTrue(theatre.halls.isNotEmpty())
@@ -138,7 +136,7 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
     )
     fun getTheatreInfoThrowsWhenNotFound() {
         assertThrows<TheatreNotFoundException> {
-            runBlocking { theatreService.getTheatreInfo(999L) }
+            theatreService.getTheatreInfo(999L)
         }
     }
 
@@ -149,9 +147,83 @@ open class TheatreServiceIntegrationTest : PostgresContainerConfig() {
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
     fun getAllTheatresInCity() {
-        val page = runBlocking { theatreService.getAllTheatreInCity("Москва", 1, 10) }
+        val page = theatreService.getAllTheatreInCity("Москва", 1, 10)
 
         assertTrue(page.content.isNotEmpty())
         assertEquals("Москва", page.content.first().city)
+    }
+
+    // 🟢 Тесты на залы
+    @Test
+    @DisplayName("Создание зала для театра с SeatRawDto")
+    @Sql(
+        scripts = ["classpath:sql/clean.sql", "classpath:sql/init.sql", "classpath:sql/insert.sql"],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun createHallWithSeats() {
+        val seatRows = listOf(
+            SeatRawDto(
+                row = 1,
+                seats = listOf(
+                    SeatStatusDto(id = 0L, status = SeatStatus.FREE, number = 1, price = 1000),
+                    SeatStatusDto(id = 0L, status = SeatStatus.FREE, number = 2, price = 1200)
+                )
+            )
+        )
+
+        val hallDto = HallDto(id = null, number = 5, seatRows = seatRows)
+
+        val created = theatreService.createHall(1L, hallDto)
+
+        assertNotNull(created.id)
+        assertEquals(5, created.number)
+        assertEquals(1, created.seatRows.size)
+        assertEquals(2, created.seatRows[0].seats.size)
+    }
+
+    @Test
+    @DisplayName("Обновление зала с SeatRawDto")
+    @Sql(
+        scripts = ["classpath:sql/clean.sql", "classpath:sql/init.sql", "classpath:sql/insert.sql"],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun updateHallWithSeats() {
+        val seatRows = listOf(
+            SeatRawDto(
+                row = 1,
+                seats = listOf(
+                    SeatStatusDto(id = 0L, status = SeatStatus.FREE, number = 1, price = 1000)
+                )
+            )
+        )
+
+        val hallDto = HallDto(id = null, number = 10, seatRows = seatRows)
+
+        val updated = theatreService.updateHall(1L, hallDto)
+
+        assertEquals(10, updated.number)
+        assertEquals(1, updated.seatRows.size)
+        assertEquals(1, updated.seatRows[0].seats.size)
+    }
+
+    @Test
+    @DisplayName("Удаление зала")
+    @Sql(
+        scripts = ["classpath:sql/clean.sql", "classpath:sql/init.sql", "classpath:sql/insert.sql"],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun deleteHall() {
+        theatreService.deleteHall(1L)
+        assertThrows<RuntimeException> { theatreService.deleteHall(1L) }
+    }
+
+    @Test
+    @DisplayName("Удаление несуществующего зала")
+    @Sql(
+        scripts = ["classpath:sql/clean.sql", "classpath:sql/init.sql", "classpath:sql/insert.sql"],
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    fun deleteHallNotFound() {
+        assertThrows<RuntimeException> { theatreService.deleteHall(999L) }
     }
 }
