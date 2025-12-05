@@ -53,8 +53,8 @@ open class ShowServiceIntegrationTest : PostgresContainerConfig() {
     @Sql(scripts = ["classpath:sql/clean.sql","classpath:sql/init.sql","classpath:sql/insert.sql"],
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     fun getAllSeatsForShow() {
-        val seats = showService.getAllSeats(1L)
-        assertTrue(seats.isNotEmpty())
+        val seats = showService.getAllSeats(1L, 1, 10)
+        assertTrue(seats.content.isNotEmpty())
         assertTrue(seats.first().seats.isNotEmpty())
         assertTrue(seats.any { it.row > 0 })
     }
