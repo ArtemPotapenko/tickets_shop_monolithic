@@ -2,6 +2,7 @@ package ru.itmo.tickets_shop.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import ru.itmo.tickets_shop.dto.PerformanceDto
@@ -19,6 +20,14 @@ import ru.itmo.tickets_shop.repository.SeatPriceRepository
 import ru.itmo.tickets_shop.repository.ShowRepository
 import ru.itmo.tickets_shop.repository.TicketRepository
 import java.time.LocalDateTime
+
+fun <T> List<T>.toPage(page: Int, pageSize: Int): Page<T> {
+    val total = this.size
+    val fromIndex = ((page - 1) * pageSize).coerceAtLeast(0)
+    val toIndex = (fromIndex + pageSize).coerceAtMost(total)
+    val content = if (fromIndex >= total) emptyList() else this.subList(fromIndex, toIndex)
+    return PageImpl(content, PageRequest.of(page - 1, pageSize), total.toLong())
+}
 
 @Service
 class ShowService(
@@ -52,16 +61,15 @@ class ShowService(
         return shows.map { it.toViewDto() }
     }
 
-    fun getAllSeats(showId: Long): List<SeatRawDto> {
-        log.info("Получение всех мест для шоу id={}", showId)
+    fun getAllSeats(showId: Long, page: Int, pageSize: Int): Page<SeatRawDto> {
+        log.info("Получение всех мест для шоу id={}, page={}, pageSize={}", showId, page, pageSize)
 
         val seats = seatPriceRepository.findSeatsByShow(showId)
         val ids = seats.map { it.seat.id }
         val tickets = ticketRepository.findAllBySeatIdInAndShowId(ids, showId, TicketStatus.CANCELLED)
-
         val mapSeatToTicket = tickets.associateBy { it.seat!!.id }
 
-        return seats
+        val rows = seats
             .groupBy { it.seat.rowNumber }
             .map { (row, seatPrices) ->
                 SeatRawDto(
@@ -69,6 +77,9 @@ class ShowService(
                     seatPrices.map { it.toSeatStatusDto(mapSeatToTicket[it.seat.id]) }
                 )
             }
+            .sortedBy { it.row }
+
+        return rows.toPage(page, pageSize)
     }
 
     fun createPerformance(dto: PerformanceDto): PerformanceDto {

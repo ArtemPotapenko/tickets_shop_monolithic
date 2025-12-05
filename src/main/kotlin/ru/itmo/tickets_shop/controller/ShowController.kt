@@ -39,15 +39,26 @@ class ShowController(
             content = resultPage.content
         )
 
-        return ResponseEntity.ok(dto)
+        return ResponseEntity.ok()
+            .header("X-Total-Count", resultPage.totalElements.toString())
+            .body(dto)
     }
 
     @GetMapping("/{id}/seats")
-    @Operation(summary = "Получить список мест для шоу")
-    fun getAllSeats(
-        @PathVariable id: Long
-    ): ResponseEntity<List<SeatRawDto>> {
-        return ResponseEntity.ok(showService.getAllSeats(id))
+    fun getAllSeatsPaged(
+        @PathVariable id: Long,
+        @RequestParam page: Int = 1,
+        @RequestParam pageSize: Int = 10
+    ): ResponseEntity<PageCountDto<SeatRawDto>>{
+        val resultPage = showService.getAllSeats(id, page, pageSize)
+        val dto = PageCountDto(
+            pageNumber = resultPage.number + 1,
+            pageSize = resultPage.size,
+            content = resultPage.content
+        )
+        return ResponseEntity.ok()
+            .header("X-Total-Count", resultPage.totalElements.toString())
+            .body(dto)
     }
 
     @PostMapping("/performance")

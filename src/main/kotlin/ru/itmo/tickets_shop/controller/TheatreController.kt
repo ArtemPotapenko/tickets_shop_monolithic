@@ -2,6 +2,7 @@ package ru.itmo.tickets_shop.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import ru.itmo.tickets_shop.dto.*
 import ru.itmo.tickets_shop.service.TheatreService
@@ -17,13 +18,16 @@ class TheatreController(private val theatreService: TheatreService) {
         @RequestParam city: String,
         @RequestParam page: Int = 1,
         @RequestParam size: Int = 10
-    ): PageCountDto<TheatreViewDto> {
+    ): ResponseEntity<PageCountDto<TheatreViewDto>> {
         val result = theatreService.getAllTheatreInCity(city, page, size)
-        return PageCountDto(
+        val dto = PageCountDto(
             pageNumber = page,
             pageSize = size,
             content = result.content
         )
+        return ResponseEntity.ok()
+            .header("X-Total-Count", result.totalElements.toString())
+            .body(dto)
     }
 
     @Operation(summary = "Получить информацию о театре по ID")
