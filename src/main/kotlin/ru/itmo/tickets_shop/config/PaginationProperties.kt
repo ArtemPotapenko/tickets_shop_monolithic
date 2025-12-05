@@ -5,6 +5,6 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 @ConfigurationProperties(prefix = "app.pagination")
-class PaginationProperties {
+open class PaginationProperties {
     var maxSize: Int = 50
 }

@@ -21,13 +21,6 @@ import ru.itmo.tickets_shop.repository.ShowRepository
 import ru.itmo.tickets_shop.repository.TicketRepository
 import java.time.LocalDateTime
 
-fun <T> List<T>.toPage(page: Int, pageSize: Int): Page<T> {
-    val total = this.size
-    val fromIndex = ((page - 1) * pageSize).coerceAtLeast(0)
-    val toIndex = (fromIndex + pageSize).coerceAtMost(total)
-    val content = if (fromIndex >= total) emptyList() else this.subList(fromIndex, toIndex)
-    return PageImpl(content, PageRequest.of(page - 1, pageSize), total.toLong())
-}
 
 @Service
 class ShowService(

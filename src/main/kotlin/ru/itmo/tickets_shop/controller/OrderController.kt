@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import ru.itmo.tickets_shop.dto.OrderDto
 import ru.itmo.tickets_shop.dto.OrderPayload
-import ru.itmo.tickets_shop.dto.PageScrollDto
 import ru.itmo.tickets_shop.dto.TicketDto
 import ru.itmo.tickets_shop.service.OrderService
 import ru.itmo.tickets_shop.validation.PaginationValidator

@@ -27,7 +27,7 @@ import ru.itmo.tickets_shop.validation.PaginationValidator
 import java.time.LocalDateTime
 
 @WebMvcTest(ShowController::class)
-class ShowControllerTest {
+open class ShowControllerTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc

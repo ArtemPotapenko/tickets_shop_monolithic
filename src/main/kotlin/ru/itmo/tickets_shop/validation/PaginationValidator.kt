@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import ru.itmo.tickets_shop.config.PaginationProperties
 
 @Component
-class PaginationValidator(
+open class PaginationValidator(
     val props: PaginationProperties
 ) {
     fun validateSize(size: Int) {
