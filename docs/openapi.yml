@@ -43,7 +43,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageCountDtoTheatreViewDto"
+                type: array
+                items:
+                  $ref: "#/components/schemas/TheatreViewDto"
     put:
       tags:
       - Theatre
@@ -281,7 +283,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageCountDtoShowViewDto"
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShowViewDto"
   /api/shows/{id}:
     get:
       tags:
@@ -306,8 +310,7 @@ paths:
     get:
       tags:
       - Show
-      summary: Получить список мест для шоу
-      operationId: getAllSeats
+      operationId: getAllSeatsPaged
       parameters:
       - name: id
         in: path
@@ -315,6 +318,18 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
       responses:
         "200":
           description: OK
@@ -355,7 +370,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageScrollDtoTicketDto"
+                type: array
+                items:
+                  $ref: "#/components/schemas/TicketDto"
 components:
   schemas:
     HallViewDto:
@@ -517,23 +534,6 @@ components:
       required:
       - seatIds
       - showId
-    PageCountDtoTheatreViewDto:
-      type: object
-      properties:
-        pageNumber:
-          type: integer
-          format: int32
-        pageSize:
-          type: integer
-          format: int32
-        content:
-          type: array
-          items:
-            $ref: "#/components/schemas/TheatreViewDto"
-      required:
-      - content
-      - pageNumber
-      - pageSize
     TheatreViewDto:
       type: object
       properties:
@@ -593,23 +593,6 @@ components:
       - id
       - name
       - shows
-    PageCountDtoShowViewDto:
-      type: object
-      properties:
-        pageNumber:
-          type: integer
-          format: int32
-        pageSize:
-          type: integer
-          format: int32
-        content:
-          type: array
-          items:
-            $ref: "#/components/schemas/ShowViewDto"
-      required:
-      - content
-      - pageNumber
-      - pageSize
     ShowDto:
       type: object
       properties:
@@ -637,18 +620,6 @@ components:
       - id
       - theatre
       - title
-    PageScrollDtoTicketDto:
-      type: object
-      properties:
-        hasNextPage:
-          type: boolean
-        content:
-          type: array
-          items:
-            $ref: "#/components/schemas/TicketDto"
-      required:
-      - content
-      - hasNextPage
     TicketDto:
       type: object
       properties:
