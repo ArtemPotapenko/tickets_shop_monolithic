@@ -6,11 +6,15 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import ru.itmo.tickets_shop.dto.*
 import ru.itmo.tickets_shop.service.TheatreService
+import ru.itmo.tickets_shop.validation.PaginationValidator
 
 @RestController
 @RequestMapping("/api/theatres")
 @Tag(name = "Theatre", description = "Theatre management APIs")
-class TheatreController(private val theatreService: TheatreService) {
+class TheatreController(
+    private val theatreService: TheatreService,
+    private val paginationValidator: PaginationValidator,
+) {
 
     @Operation(summary = "Получить список театров в городе")
     @GetMapping
@@ -19,14 +23,19 @@ class TheatreController(private val theatreService: TheatreService) {
         @RequestParam page: Int = 1,
         @RequestParam size: Int = 10
     ): ResponseEntity<PageCountDto<TheatreViewDto>> {
-        val result = theatreService.getAllTheatreInCity(city, page, size)
+        paginationValidator.validateSize(size)
+
+        val resultPage = theatreService.getAllTheatreInCity(city, page, size)
         val dto = PageCountDto(
             pageNumber = page,
             pageSize = size,
-            content = result.content
+            content = resultPage.content
         )
+
         return ResponseEntity.ok()
-            .header("X-Total-Count", result.totalElements.toString())
+            .header("X-Total-Count", resultPage.totalElements.toString())
+            .header("X-Page-Number", (resultPage.number + 1).toString())
+            .header("X-Page-Size", resultPage.size.toString())
             .body(dto)
     }
 

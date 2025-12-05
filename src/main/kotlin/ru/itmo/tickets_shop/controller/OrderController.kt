@@ -2,17 +2,22 @@ package ru.itmo.tickets_shop.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import ru.itmo.tickets_shop.dto.OrderDto
 import ru.itmo.tickets_shop.dto.OrderPayload
 import ru.itmo.tickets_shop.dto.PageScrollDto
 import ru.itmo.tickets_shop.dto.TicketDto
 import ru.itmo.tickets_shop.service.OrderService
+import ru.itmo.tickets_shop.validation.PaginationValidator
 
 @RestController
 @RequestMapping("/api/orders")
 @Tag(name = "Order", description = "Order and tickets management APIs")
-open class OrderController(private val orderService: OrderService) {
+open class OrderController(
+    private val orderService: OrderService,
+    private val paginationValidator: PaginationValidator,
+) {
 
     @Operation(summary = "Резервирование билетов")
     @PostMapping("/reserve")
@@ -32,11 +37,16 @@ open class OrderController(private val orderService: OrderService) {
         @PathVariable orderId: Long,
         @RequestParam page: Int = 0,
         @RequestParam size: Int = 10
-    ): PageScrollDto<TicketDto> {
-        val pageResult = orderService.getTicketsPageByOrderId(orderId, page, size)
-        return PageScrollDto(
-            hasNextPage = pageResult.hasNext(),
-            content = pageResult.content
+    ): ResponseEntity<PageScrollDto<TicketDto>> {
+        paginationValidator.validateSize(size)
+
+        val resultPage = orderService.getTicketsPageByOrderId(orderId, page, size)
+        val dto = PageScrollDto(
+            hasNextPage = resultPage.hasNext(),
+            content = resultPage.content
         )
+        return ResponseEntity.ok()
+            .header("X-Has-Next-Page", resultPage.hasNext().toString())
+            .body(dto)
     }
 }

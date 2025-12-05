@@ -7,12 +7,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import ru.itmo.tickets_shop.dto.*
 import ru.itmo.tickets_shop.service.ShowService
+import ru.itmo.tickets_shop.validation.PaginationValidator
 
 @RestController
 @RequestMapping("/api/shows")
 @Tag(name = "Show", description = "Контроллер для работы с шоу")
 class ShowController(
-    private val showService: ShowService
+    private val showService: ShowService,
+    private val paginationValidator: PaginationValidator,
 ) {
 
     @GetMapping("/{id}")
@@ -30,6 +32,7 @@ class ShowController(
         @RequestParam page: Int,
         @RequestParam pageSize: Int
     ): ResponseEntity<PageCountDto<ShowViewDto>> {
+        paginationValidator.validateSize(pageSize)
 
         val resultPage = showService.getAllShow(city, page, pageSize)
 
@@ -58,6 +61,8 @@ class ShowController(
         )
         return ResponseEntity.ok()
             .header("X-Total-Count", resultPage.totalElements.toString())
+            .header("X-Page-Number", (resultPage.number + 1).toString())
+            .header("X-Page-Size", resultPage.size.toString())
             .body(dto)
     }
 

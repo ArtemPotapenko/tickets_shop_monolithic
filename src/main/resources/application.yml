@@ -1,6 +1,8 @@
 spring:
   application:
     name: tickets-shop
+    pagination:
+      max-size: 50
 
   datasource:
     url: jdbc:postgresql://localhost:5432/tickets_db
