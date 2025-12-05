@@ -31,20 +31,16 @@ class ShowController(
         @RequestParam city: String,
         @RequestParam page: Int,
         @RequestParam pageSize: Int
-    ): ResponseEntity<PageCountDto<ShowViewDto>> {
+    ): ResponseEntity<List<ShowViewDto>> {
         paginationValidator.validateSize(pageSize)
 
         val resultPage = showService.getAllShow(city, page, pageSize)
 
-        val dto = PageCountDto(
-            pageNumber = resultPage.number + 1,
-            pageSize = resultPage.size,
-            content = resultPage.content
-        )
-
         return ResponseEntity.ok()
             .header("X-Total-Count", resultPage.totalElements.toString())
-            .body(dto)
+            .header("X-Page-Number", (resultPage.number + 1).toString())
+            .header("X-Page-Size", resultPage.size.toString())
+            .body(resultPage.content)
     }
 
     @GetMapping("/{id}/seats")
@@ -52,18 +48,13 @@ class ShowController(
         @PathVariable id: Long,
         @RequestParam page: Int = 1,
         @RequestParam pageSize: Int = 10
-    ): ResponseEntity<PageCountDto<SeatRawDto>>{
-        val resultPage = showService.getAllSeats(id, page, pageSize)
-        val dto = PageCountDto(
-            pageNumber = resultPage.number + 1,
-            pageSize = resultPage.size,
-            content = resultPage.content
-        )
+    ): ResponseEntity<List<SeatRawDto>>{
+        paginationValidator.validateSize(pageSize)
+
+        val seats = showService.getAllSeats(id)
+
         return ResponseEntity.ok()
-            .header("X-Total-Count", resultPage.totalElements.toString())
-            .header("X-Page-Number", (resultPage.number + 1).toString())
-            .header("X-Page-Size", resultPage.size.toString())
-            .body(dto)
+            .body(seats)
     }
 
     @PostMapping("/performance")

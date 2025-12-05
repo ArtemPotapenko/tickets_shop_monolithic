@@ -61,15 +61,16 @@ class ShowService(
         return shows.map { it.toViewDto() }
     }
 
-    fun getAllSeats(showId: Long, page: Int, pageSize: Int): Page<SeatRawDto> {
-        log.info("Получение всех мест для шоу id={}, page={}, pageSize={}", showId, page, pageSize)
+    fun getAllSeats(showId: Long): List<SeatRawDto> {
+        log.info("Получение всех мест для шоу id={}", showId)
 
         val seats = seatPriceRepository.findSeatsByShow(showId)
         val ids = seats.map { it.seat.id }
         val tickets = ticketRepository.findAllBySeatIdInAndShowId(ids, showId, TicketStatus.CANCELLED)
+
         val mapSeatToTicket = tickets.associateBy { it.seat!!.id }
 
-        val rows = seats
+        return seats
             .groupBy { it.seat.rowNumber }
             .map { (row, seatPrices) ->
                 SeatRawDto(
@@ -77,9 +78,6 @@ class ShowService(
                     seatPrices.map { it.toSeatStatusDto(mapSeatToTicket[it.seat.id]) }
                 )
             }
-            .sortedBy { it.row }
-
-        return rows.toPage(page, pageSize)
     }
 
     fun createPerformance(dto: PerformanceDto): PerformanceDto {

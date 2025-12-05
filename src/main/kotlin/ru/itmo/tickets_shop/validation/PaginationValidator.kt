@@ -5,7 +5,7 @@ import ru.itmo.tickets_shop.config.PaginationProperties
 
 @Component
 class PaginationValidator(
-    private val props: PaginationProperties
+    val props: PaginationProperties
 ) {
     fun validateSize(size: Int) {
         if (size > props.maxSize) {

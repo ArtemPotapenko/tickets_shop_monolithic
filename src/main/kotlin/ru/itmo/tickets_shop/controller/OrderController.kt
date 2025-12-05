@@ -37,16 +37,11 @@ open class OrderController(
         @PathVariable orderId: Long,
         @RequestParam page: Int = 0,
         @RequestParam size: Int = 10
-    ): ResponseEntity<PageScrollDto<TicketDto>> {
+    ): ResponseEntity<List<TicketDto>> {
         paginationValidator.validateSize(size)
-
         val resultPage = orderService.getTicketsPageByOrderId(orderId, page, size)
-        val dto = PageScrollDto(
-            hasNextPage = resultPage.hasNext(),
-            content = resultPage.content
-        )
         return ResponseEntity.ok()
             .header("X-Has-Next-Page", resultPage.hasNext().toString())
-            .body(dto)
+            .body(resultPage.content)
     }
 }

@@ -22,21 +22,16 @@ class TheatreController(
         @RequestParam city: String,
         @RequestParam page: Int = 1,
         @RequestParam size: Int = 10
-    ): ResponseEntity<PageCountDto<TheatreViewDto>> {
+    ): ResponseEntity<List<TheatreViewDto>> {
         paginationValidator.validateSize(size)
 
         val resultPage = theatreService.getAllTheatreInCity(city, page, size)
-        val dto = PageCountDto(
-            pageNumber = page,
-            pageSize = size,
-            content = resultPage.content
-        )
 
         return ResponseEntity.ok()
             .header("X-Total-Count", resultPage.totalElements.toString())
             .header("X-Page-Number", (resultPage.number + 1).toString())
             .header("X-Page-Size", resultPage.size.toString())
-            .body(dto)
+            .body(resultPage.content)
     }
 
     @Operation(summary = "Получить информацию о театре по ID")
